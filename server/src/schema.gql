@@ -17,6 +17,7 @@ scalar DateTime
 
 type Mutation {
   createShipment(createShipmentInput: CreateShipmentInput!): Shipment!
+  updateShipment(updateShipmentInput: UpdateShipmentInput!): Shipment!
 }
 
 type Query {
@@ -30,4 +31,13 @@ type Shipment {
   origin: String!
   status: String!
   trackingId: String!
+}
+
+input UpdateShipmentInput {
+  destination: String
+  estimatedDelivery: DateTime
+  id: String!
+  origin: String
+  status: String
+  trackingId: String
 }

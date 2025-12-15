@@ -11,6 +11,7 @@ import {
 import { format } from "date-fns";
 import { ShipmentTile } from "./ShipmentTile";
 import { ShipmentDetailModal } from "./ShipmentDetailModal";
+import { CreateShipmentModal } from "./CreateShipmentModal";
 
 export function ShipmentGrid() {
   const [viewMode, setViewMode] = useState<"table" | "tile">("table");
@@ -18,6 +19,7 @@ export function ShipmentGrid() {
 
   // 1. ADD THIS MISSING STATE
   const [selectedShipment, setSelectedShipment] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   const PAGE_SIZE = 10;
 
@@ -128,32 +130,28 @@ export function ShipmentGrid() {
         </div>
       )}
 
-      {/* PAGINATION */}
+      {/* PAGINATION (Keep this) */}
       <div className="flex justify-between items-center pt-4">
-        <span className="text-sm text-gray-500">Page {page + 1}</span>
-        <div className="flex space-x-2">
-          <button
-            disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)}
-            className="px-3 py-1 border rounded bg-white disabled:opacity-50 hover:bg-gray-50"
-          >
-            <ArrowLeft size={16} />
-          </button>
-          <button
-            disabled={data?.shipments.length < PAGE_SIZE}
-            onClick={() => setPage((p) => p + 1)}
-            className="px-3 py-1 border rounded bg-white disabled:opacity-50 hover:bg-gray-50"
-          >
-            <ArrowRight size={16} />
-          </button>
-        </div>
+        {/* ... (pagination code is fine) ... */}
       </div>
 
-      {/* 2. ADD THIS MISSING MODAL LOGIC */}
-      {selectedShipment && (
+      {/* KEEP THIS BLOCK 👇 (It handles both Viewing and Editing triggers) */}
+      {selectedShipment && !isEditing && (
         <ShipmentDetailModal
           shipment={selectedShipment}
           onClose={() => setSelectedShipment(null)}
+          onEdit={() => setIsEditing(true)} // This is crucial
+        />
+      )}
+
+      {/* KEEP THIS BLOCK 👇 (The Edit Form) */}
+      {isEditing && selectedShipment && (
+        <CreateShipmentModal
+          shipmentToEdit={selectedShipment}
+          onClose={() => {
+            setIsEditing(false);
+            setSelectedShipment(null);
+          }}
         />
       )}
     </div>

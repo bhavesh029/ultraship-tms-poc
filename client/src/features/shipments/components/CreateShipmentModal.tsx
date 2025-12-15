@@ -1,14 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@apollo/client";
-import { CREATE_SHIPMENT } from "../graphql/queries";
-import { GET_SHIPMENTS } from "../graphql/queries"; // Needed to refresh list
+import {
+  CREATE_SHIPMENT,
+  UPDATE_SHIPMENT,
+  GET_SHIPMENTS,
+} from "../graphql/queries";
 import { X, Save, Loader2 } from "lucide-react";
 
 interface Props {
   onClose: () => void;
+  shipmentToEdit?: any; // NEW PROP: If this exists, we are in "Edit Mode"
 }
 
-export function CreateShipmentModal({ onClose }: Props) {
+export function CreateShipmentModal({ onClose, shipmentToEdit }: Props) {
+  const isEditMode = !!shipmentToEdit;
+
   const [formData, setFormData] = useState({
     trackingId: "",
     origin: "",
@@ -17,8 +23,27 @@ export function CreateShipmentModal({ onClose }: Props) {
     estimatedDelivery: "",
   });
 
-  const [createShipment, { loading, error }] = useMutation(CREATE_SHIPMENT, {
-    // Critical: Update the cache or refetch so the list updates immediately
+  // Load data if editing
+  useEffect(() => {
+    if (shipmentToEdit) {
+      setFormData({
+        trackingId: shipmentToEdit.trackingId,
+        origin: shipmentToEdit.origin,
+        destination: shipmentToEdit.destination,
+        status: shipmentToEdit.status,
+        estimatedDelivery: shipmentToEdit.estimatedDelivery
+          ? new Date(shipmentToEdit.estimatedDelivery)
+              .toISOString()
+              .split("T")[0]
+          : "",
+      });
+    }
+  }, [shipmentToEdit]);
+
+  // Choose the right mutation
+  const MUTATION = isEditMode ? UPDATE_SHIPMENT : CREATE_SHIPMENT;
+
+  const [submitAction, { loading, error }] = useMutation(MUTATION, {
     refetchQueries: [
       { query: GET_SHIPMENTS, variables: { skip: 0, take: 10 } },
     ],
@@ -27,21 +52,35 @@ export function CreateShipmentModal({ onClose }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createShipment({
+
+    const payload: any = {
+      ...formData,
+      estimatedDelivery: formData.estimatedDelivery
+        ? new Date(formData.estimatedDelivery)
+        : null,
+    };
+
+    // If editing, we MUST send the ID
+    if (isEditMode) {
+      payload.id = shipmentToEdit.id;
+    }
+
+    // Determine input variable name based on mutation
+    const variableName = isEditMode
+      ? "updateShipmentInput"
+      : "createShipmentInput";
+
+    submitAction({
       variables: {
-        input: {
-          ...formData,
-          // Convert empty date string to undefined if not set
-          estimatedDelivery: formData.estimatedDelivery
-            ? new Date(formData.estimatedDelivery)
-            : null,
-        },
+        input: payload, // We map this to the specific input name in the query/mutation definition if needed,
+        // but Apollo usually matches if the query argument matches.
+        // Let's ensure the QUERY matches. See step 1 note.
       },
     });
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
@@ -49,7 +88,9 @@ export function CreateShipmentModal({ onClose }: Props) {
 
       <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up">
         <div className="bg-slate-900 text-white p-4 flex justify-between items-center">
-          <h2 className="text-lg font-bold">Create New Shipment</h2>
+          <h2 className="text-lg font-bold">
+            {isEditMode ? "Edit Shipment" : "Create New Shipment"}
+          </h2>
           <button onClick={onClose} className="hover:bg-slate-700 p-1 rounded">
             <X size={20} />
           </button>
@@ -62,6 +103,7 @@ export function CreateShipmentModal({ onClose }: Props) {
             </div>
           )}
 
+          {/* Tracking ID is usually read-only in edit mode, but let's allow edit for flexibility */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Tracking ID
@@ -69,8 +111,7 @@ export function CreateShipmentModal({ onClose }: Props) {
             <input
               required
               type="text"
-              placeholder="e.g., TRK-998877"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
               value={formData.trackingId}
               onChange={(e) =>
                 setFormData({ ...formData, trackingId: e.target.value })
@@ -78,6 +119,7 @@ export function CreateShipmentModal({ onClose }: Props) {
             />
           </div>
 
+          {/* ... Origin/Dest Fields (Same as before) ... */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -86,8 +128,7 @@ export function CreateShipmentModal({ onClose }: Props) {
               <input
                 required
                 type="text"
-                placeholder="New York"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
                 value={formData.origin}
                 onChange={(e) =>
                   setFormData({ ...formData, origin: e.target.value })
@@ -101,8 +142,7 @@ export function CreateShipmentModal({ onClose }: Props) {
               <input
                 required
                 type="text"
-                placeholder="London"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
                 value={formData.destination}
                 onChange={(e) =>
                   setFormData({ ...formData, destination: e.target.value })
@@ -116,7 +156,7 @@ export function CreateShipmentModal({ onClose }: Props) {
               Status
             </label>
             <select
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
               value={formData.status}
               onChange={(e) =>
                 setFormData({ ...formData, status: e.target.value })
@@ -135,7 +175,7 @@ export function CreateShipmentModal({ onClose }: Props) {
             </label>
             <input
               type="date"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
               value={formData.estimatedDelivery}
               onChange={(e) =>
                 setFormData({ ...formData, estimatedDelivery: e.target.value })
@@ -161,7 +201,7 @@ export function CreateShipmentModal({ onClose }: Props) {
               ) : (
                 <Save className="mr-2" size={18} />
               )}
-              Create Shipment
+              {isEditMode ? "Update Shipment" : "Create Shipment"}
             </button>
           </div>
         </form>

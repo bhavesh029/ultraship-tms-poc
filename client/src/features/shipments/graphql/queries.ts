@@ -25,3 +25,15 @@ export const CREATE_SHIPMENT = gql`
     }
   }
 `;
+
+export const UPDATE_SHIPMENT = gql`
+  mutation UpdateShipment($input: UpdateShipmentInput!) {
+    updateShipment(updateShipmentInput: $input) {
+      id
+      status
+      origin
+      destination
+      estimatedDelivery
+    }
+  }
+`;

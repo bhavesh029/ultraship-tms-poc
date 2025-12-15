@@ -3,6 +3,7 @@ import { ShipmentService } from './shipment.service';
 import { Shipment } from './shipment.entity';
 import { ShipmentsArgs } from './dto/shipments.args';
 import { CreateShipmentInput } from './dto/create-shipment.input';
+import { UpdateShipmentInput } from './dto/update-shipment.input';
 
 @Resolver(() => Shipment)
 export class ShipmentResolver {
@@ -13,14 +14,14 @@ export class ShipmentResolver {
     return this.shipmentService.findAll(args);
   }
 
-//   @Mutation(() => Shipment)
-//   async createTestShipment() {
-//     return this.shipmentService.createDummy();
-//   }
-
   // NEW: Real Mutation
   @Mutation(() => Shipment)
   async createShipment(@Args('createShipmentInput') input: CreateShipmentInput) {
     return this.shipmentService.create(input);
+  }
+
+  @Mutation(() => Shipment)
+  async updateShipment(@Args('updateShipmentInput') input: UpdateShipmentInput) {
+    return this.shipmentService.update(input.id, input);
   }
 }

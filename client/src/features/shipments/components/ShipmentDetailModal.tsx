@@ -4,9 +4,10 @@ import { format } from "date-fns";
 interface Props {
   shipment: any;
   onClose: () => void;
+  onEdit: () => void; // NEW PROP
 }
 
-export function ShipmentDetailModal({ shipment, onClose }: Props) {
+export function ShipmentDetailModal({ shipment, onClose, onEdit }: Props) {
   if (!shipment) return null;
 
   return (
@@ -113,9 +114,13 @@ export function ShipmentDetailModal({ shipment, onClose }: Props) {
 
         {/* Footer Actions */}
         <div className="p-6 border-t bg-gray-50 flex space-x-3">
-          <button className="flex-1 bg-slate-900 text-white py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors">
+          <button
+            onClick={onEdit} // ATTACH HANDLER
+            className="flex-1 bg-slate-900 text-white py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors"
+          >
             Edit Shipment
           </button>
+
           <button className="px-4 py-3 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 font-medium">
             Delete
           </button>
