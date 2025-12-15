@@ -9,7 +9,7 @@ export class Shipment {
   @Field(() => ID)
   id: string;
 
-  @Column()
+  @Column({ unique: true })
   @Field()
   trackingId: string;
 

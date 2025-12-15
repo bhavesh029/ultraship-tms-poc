@@ -17,7 +17,7 @@ export const CREATE_SHIPMENT = gql`
   mutation CreateShipment($input: CreateShipmentInput!) {
     createShipment(createShipmentInput: $input) {
       id
-      trackingId
+      trackingId # We still want to RECEIVE it back to display it
       status
       origin
       destination
@@ -35,5 +35,11 @@ export const UPDATE_SHIPMENT = gql`
       destination
       estimatedDelivery
     }
+  }
+`;
+
+export const DELETE_SHIPMENT = gql`
+  mutation DeleteShipment($id: String!) {
+    deleteShipment(id: $id)
   }
 `;

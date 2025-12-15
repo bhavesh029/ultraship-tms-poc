@@ -9,25 +9,24 @@ import { X, Save, Loader2 } from "lucide-react";
 
 interface Props {
   onClose: () => void;
-  shipmentToEdit?: any; // NEW PROP: If this exists, we are in "Edit Mode"
+  shipmentToEdit?: any;
 }
 
 export function CreateShipmentModal({ onClose, shipmentToEdit }: Props) {
   const isEditMode = !!shipmentToEdit;
 
   const [formData, setFormData] = useState({
-    trackingId: "",
+    // REMOVED trackingId from initial state
     origin: "",
     destination: "",
     status: "PENDING",
     estimatedDelivery: "",
   });
 
-  // Load data if editing
   useEffect(() => {
     if (shipmentToEdit) {
       setFormData({
-        trackingId: shipmentToEdit.trackingId,
+        // Tracking ID is not editable, so we don't load it into state
         origin: shipmentToEdit.origin,
         destination: shipmentToEdit.destination,
         status: shipmentToEdit.status,
@@ -40,7 +39,6 @@ export function CreateShipmentModal({ onClose, shipmentToEdit }: Props) {
     }
   }, [shipmentToEdit]);
 
-  // Choose the right mutation
   const MUTATION = isEditMode ? UPDATE_SHIPMENT : CREATE_SHIPMENT;
 
   const [submitAction, { loading, error }] = useMutation(MUTATION, {
@@ -60,22 +58,14 @@ export function CreateShipmentModal({ onClose, shipmentToEdit }: Props) {
         : null,
     };
 
-    // If editing, we MUST send the ID
     if (isEditMode) {
       payload.id = shipmentToEdit.id;
+      // If updating, we usually don't send trackingId anyway,
+      // but if your update DTO allows it, you can leave it out.
     }
 
-    // Determine input variable name based on mutation
-    const variableName = isEditMode
-      ? "updateShipmentInput"
-      : "createShipmentInput";
-
     submitAction({
-      variables: {
-        input: payload, // We map this to the specific input name in the query/mutation definition if needed,
-        // but Apollo usually matches if the query argument matches.
-        // Let's ensure the QUERY matches. See step 1 note.
-      },
+      variables: { input: payload },
     });
   };
 
@@ -103,23 +93,20 @@ export function CreateShipmentModal({ onClose, shipmentToEdit }: Props) {
             </div>
           )}
 
-          {/* Tracking ID is usually read-only in edit mode, but let's allow edit for flexibility */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tracking ID
-            </label>
-            <input
-              required
-              type="text"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
-              value={formData.trackingId}
-              onChange={(e) =>
-                setFormData({ ...formData, trackingId: e.target.value })
-              }
-            />
-          </div>
+          {/* DISPLAY ONLY - Show Tracking ID if editing */}
+          {isEditMode && (
+            <div className="bg-gray-50 p-3 rounded border border-gray-200">
+              <span className="text-xs text-gray-500 uppercase font-bold">
+                Tracking ID
+              </span>
+              <p className="font-mono font-bold text-slate-700">
+                {shipmentToEdit.trackingId}
+              </p>
+            </div>
+          )}
 
-          {/* ... Origin/Dest Fields (Same as before) ... */}
+          {/* DELETED THE TRACKING ID INPUT FIELD HERE */}
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

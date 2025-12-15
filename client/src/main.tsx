@@ -4,26 +4,39 @@ import {
   ApolloClient,
   InMemoryCache,
   ApolloProvider,
-  HttpLink,
-} from "@apollo/client"; // Import HttpLink directly
+  createHttpLink,
+} from "@apollo/client";
+import { setContext } from "@apollo/client/link/context"; // New Import
 import App from "./App.tsx";
 import "./index.css";
-// import { ApolloProvider } from "@apollo/client/react"; // <--- Deep import
 
-// 1. Create the link using the class constructor (Fixes deprecation)
-const link = new HttpLink({
-  uri: "http://localhost:3000/graphql",
+// 1. Create the HTTP Link (Where the API lives)
+const httpLink = createHttpLink({
+  uri: import.meta.env.VITE_API_URL || "http://localhost:3000/graphql",
 });
 
-// 2. Initialize Client
+// 2. Create the Auth Middleware (The "Token Stamper")
+const authLink = setContext((_, { headers }) => {
+  // Get the token from storage every time a request is made
+  const token = localStorage.getItem("token");
+
+  // Return the headers to the context so httpLink can read them
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : "", // Attach the token if it exists
+    },
+  };
+});
+
+// 3. Chain them together: Auth -> Http
 const client = new ApolloClient({
-  link: link,
+  link: authLink.concat(httpLink),
   cache: new InMemoryCache(),
 });
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    {/* 3. Provider should now work if install is clean */}
     <ApolloProvider client={client}>
       <App />
     </ApolloProvider>

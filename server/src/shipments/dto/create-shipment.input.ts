@@ -5,10 +5,6 @@ import { IsNotEmpty, IsOptional } from 'class-validator';
 export class CreateShipmentInput {
   @Field()
   @IsNotEmpty()
-  trackingId: string;
-
-  @Field()
-  @IsNotEmpty()
   origin: string;
 
   @Field()

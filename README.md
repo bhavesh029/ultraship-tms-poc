@@ -1,98 +1,79 @@
-# Transportation Management System (TMS) - POC
+# 🚚 UltraShip TMS - Full Stack POC
 
-## 🚀 Overview
-A scalable full-stack Proof of Concept (POC) for a Transportation Management System. This application demonstrates a high-performance GraphQL API backend and a responsive, aesthetic React frontend for managing shipment data.
+A next-generation Transportation Management System (TMS) built to streamline logistics operations. This Proof of Concept (POC) demonstrates a scalable **GraphQL** backend and a high-performance **React** frontend with Role-Based Access Control (RBAC).
 
-**Live Demo:** [Link to your Vercel/Netlify URL]
-**API Playground:** [Link to your Render/Railway URL]/graphql
+
+
+## 🚀 Live Demo & Repository
+* **Live URL:** [Insert your Vercel/Netlify Link Here]
+* **Repository:** [Insert your GitHub Link Here]
+
+---
 
 ## 🛠 Tech Stack
-* **Backend:** NestJS, TypeScript, GraphQL (Code-First), PostgreSQL, TypeORM.
-* **Frontend:** React (Vite), Tailwind CSS, Apollo Client, Shadcn/UI (for accessibility and design).
-* **Deployment:** Vercel (Frontend) + Render (Backend) + Neon (Postgres).
+This project uses a modern, type-safe stack designed for scalability and performance.
 
-## 📋 Key Features
-* **Data Visualization:** Dual-view system allowing users to toggle between a Data Grid (Table) and Tile View (Cards).
-* **Role-Based Access Control (RBAC):** Distinct capabilities for `ADMIN` (can delete/edit) and `EMPLOYEE` (read-only views).
-* **Performance:** * Server-side pagination and sorting to handle large datasets.
-    * Optimized database indexing on `status` and `trackingId`.
-* **Design:** Responsive layout with a collapsible hamburger menu and "Slide-over" detailed views for shipments.
+### **Backend (Server)**
+* **Framework:** [NestJS](https://nestjs.com/) (Node.js)
+* **API:** GraphQL (Code-First approach)
+* **Database:** PostgreSQL + TypeORM
+* **Auth:** JWT + Role-Based Access Control (RBAC)
+* **Validation:** Class-Validator & Class-Transformer
 
-## 📝 Architectural Decisions & Assumptions
-**1. Data Model Strategy**
-The requirement document mentioned an "Employee" data model but requested "Shipment" queries. Given the context of *UltraShip TMS*, I prioritized the **Shipment Entity** as the core business domain.
-* **Shipment Fields:** `trackingId`, `status`, `origin`, `destination`, `estimatedDelivery`.
-* **User Entity:** Used solely for RBAC (Admin vs. Employee).
+### **Frontend (Client)**
+* **Framework:** React 18 (Vite)
+* **Styling:** Tailwind CSS (Responsive Design)
+* **State/API:** Apollo Client (GraphQL)
+* **UI Components:** Lucide Icons, Custom Modals, Slide-overs
+* **Utils:** Date-fns, LocalStorage
 
-**2. Scalability**
-* **GraphQL:** Solves over-fetching issues by allowing the client to request only necessary fields (e.g., Grid View requests fewer fields than Detail View).
-* **Structure:** Backend follows a modular architecture (Services, Resolvers, DTOs) ensuring easy extension for microservices.
+---
 
-## ⚙️ Local Setup
+## ✨ Key Features (Assignment Requirements)
 
-### Backend
-1. Navigate to server: `cd server`
-2. Install dependencies: `npm install`
-3. Set up `.env` (see `.env.example`).
-4. Run app: `npm run start:dev`
+### 1. 🎨 Extraordinary UI/UX
+* **Dual View Mode:** Toggle between a data-dense **Grid View** (Table) and a visual **Tile View** (Cards).
+* **Smooth Animations:** Details open in a "Slide-over" drawer with CSS transitions.
+* **Responsive:** Fully functional on mobile/tablet (Hamburger menu included).
 
-### Frontend
-1. Navigate to client: `cd client`
-2. Install dependencies: `npm install`
-3. Run app: `npm run dev`
+### 2. ⚡️ Performance & Scalability
+* **Server-Side Pagination:** Efficiently handles large datasets (fetches 10 records at a time).
+* **Filtering & Sorting:** Backend-optimized queries for status filtering.
+* **Optimized API:** GraphQL prevents over-fetching data.
 
-## 🧪 Testing credentials
-To test the RBAC features, use the following login credentials:
+### 3. 🔐 Security & RBAC
+* **Secure Authentication:** JWT-based login system.
+* **Role Management:**
+    * **ADMIN:** Can View, Create, Edit, and Delete shipments.
+    * **EMPLOYEE:** Read-only access (Create buttons are hidden).
 
-* **Admin User:** `admin@ultraship.com` / `admin123` (Full Access)
-* **Employee User:** `staff@ultraship.com` / `staff123` (Read Only)
+---
 
-ultraship-tms-poc/
-├── README.md              # Your documentation (Crucial for the assignment)
-├── .gitignore             # Ignore node_modules, .env, dist, etc.
-├── package.json           # Optional: scripts to install/run both (if you want)
-│
-├── server/                # NESTJS BACKEND
-│   ├── src/
-│   │   ├── app.module.ts
-│   │   ├── main.ts
-│   │   ├── common/        # Shared logic
-│   │   │   └── guards/    # Auth guards (RBAC)
-│   │   ├── database/      # Database config
-│   │   ├── shipments/     # SHIPMENT MODULE
-│   │   │   ├── shipment.entity.ts
-│   │   │   ├── shipment.resolver.ts
-│   │   │   ├── shipment.service.ts
-│   │   │   └── dto/       # Inputs for filtering/pagination
-│   │   └── users/         # USER/AUTH MODULE
-│   │       ├── user.entity.ts
-│   │       ├── auth.service.ts
-│   │       └── user.resolver.ts
-│   ├── test/
-│   ├── .env               # DB credentials (DO NOT COMMIT)
-│   ├── .env.example       # Template for the reviewer
-│   ├── docker-compose.yml # (Optional) Good for "extraordinary" points
-│   └── package.json
-│
-└── client/                # REACT FRONTEND
-    ├── src/
-    │   ├── assets/
-    │   ├── components/    # Shared UI (Buttons, Layouts, Shadcn components)
-    │   │   ├── ui/        # Shadcn base components
-    │   │   └── Layout.tsx # Sidebar + Header wrapper
-    │   ├── features/      # Feature-based folder structure
-    │   │   └── shipments/
-    │   │       ├── components/
-    │   │       │   ├── ShipmentGrid.tsx
-    │   │       │   ├── ShipmentTile.tsx
-    │   │       │   └── ShipmentDetailModal.tsx
-    │   │       └── hooks/ # Custom hooks (useShipments)
-    │   ├── pages/         # Route pages
-    │   │   ├── Dashboard.tsx
-    │   │   └── Login.tsx
-    │   ├── graphql/       # Generated types from backend
-    │   ├── App.tsx
-    │   └── main.tsx
-    ├── .env               # API URL
-    ├── tailwind.config.js
-    └── package.json
+## 🏁 Getting Started (Run Locally)
+
+Follow these steps to get the application running on your machine in under 5 minutes.
+
+### Prerequisites
+* Node.js (v18+)
+* PostgreSQL (Local or Docker)
+
+### 1. Clone the Repository
+```bash
+git clone [https://github.com/YOUR_USERNAME/ultraship-tms-poc.git](https://github.com/YOUR_USERNAME/ultraship-tms-poc.git)
+cd ultraship-tms-poc
+
+cd server
+npm install
+
+# Option A: If you have Docker (Easiest)
+docker-compose up -d
+
+# Option B: If you use local Postgres
+# Update server/src/app.module.ts with your DB credentials if needed.
+
+# Run the Server
+npm run start:dev
+
+cd client
+npm install
+npm run dev

@@ -7,7 +7,6 @@ input CreateShipmentInput {
   estimatedDelivery: DateTime
   origin: String!
   status: String!
-  trackingId: String!
 }
 
 """
@@ -15,12 +14,20 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type LoginResponse {
+  access_token: String!
+  user: User!
+}
+
 type Mutation {
   createShipment(createShipmentInput: CreateShipmentInput!): Shipment!
+  deleteShipment(id: String!): Boolean!
+  login(password: String!, username: String!): LoginResponse!
   updateShipment(updateShipmentInput: UpdateShipmentInput!): Shipment!
 }
 
 type Query {
+  shipment(id: String!): Shipment!
   shipments(skip: Int! = 0, status: String, take: Int! = 10): [Shipment!]!
 }
 
@@ -39,5 +46,10 @@ input UpdateShipmentInput {
   id: String!
   origin: String
   status: String
-  trackingId: String
+}
+
+type User {
+  id: ID!
+  role: String!
+  username: String!
 }

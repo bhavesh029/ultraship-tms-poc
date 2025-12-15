@@ -6,7 +6,10 @@ async function bootstrap() {
 
   // 1. ENABLE CORS (Allow Frontend to talk to Backend)
   app.enableCors({
-    origin: 'http://localhost:5173', // Allow your Vite frontend
+    origin: [
+      'http://localhost:5173', 
+      process.env.FRONTEND_URL
+    ],
     credentials: true,
   });
 

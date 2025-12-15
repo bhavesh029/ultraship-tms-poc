@@ -34,7 +34,13 @@ export class ShipmentService {
   }
 
   async create(input: CreateShipmentInput): Promise<Shipment> {
-     const newShipment = this.shipmentRepository.create(input);
+     const trackingId = `TRK-${Date.now().toString().slice(-6)}`; 
+
+     const newShipment = this.shipmentRepository.create({
+       ...input,
+       trackingId,
+     });
+     
      return this.shipmentRepository.save(newShipment);
   }
 
@@ -49,5 +55,18 @@ export class ShipmentService {
     }
 
     return this.shipmentRepository.save(shipment);
+  }
+
+  async remove(id: string): Promise<boolean> {
+    const result = await this.shipmentRepository.delete(id);
+    return (result.affected ?? 0) > 0;
+  }
+
+  async findOne(id: string): Promise<Shipment> {
+    const shipment = await this.shipmentRepository.findOneBy({ id });
+    if (!shipment) {
+      throw new Error(`Shipment with ID ${id} not found`);
+    }
+    return shipment;
   }
 }

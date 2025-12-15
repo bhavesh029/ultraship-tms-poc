@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   MoreVertical,
+  Filter,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ShipmentTile } from "./ShipmentTile";
@@ -14,21 +15,34 @@ import { ShipmentDetailModal } from "./ShipmentDetailModal";
 import { CreateShipmentModal } from "./CreateShipmentModal";
 
 export function ShipmentGrid() {
+  const userRole = localStorage.getItem("role");
+  const isAdmin = userRole === "ADMIN";
+
   const [viewMode, setViewMode] = useState<"table" | "tile">("table");
   const [page, setPage] = useState(0);
 
-  // 1. ADD THIS MISSING STATE
+  // NEW: Status Filter State
+  const [statusFilter, setStatusFilter] = useState<string>("");
+
   const [selectedShipment, setSelectedShipment] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
 
   const PAGE_SIZE = 10;
 
   const { data, loading, error } = useQuery(GET_SHIPMENTS, {
-    variables: { skip: page * PAGE_SIZE, take: PAGE_SIZE },
+    variables: {
+      skip: page * PAGE_SIZE,
+      take: PAGE_SIZE,
+      // Pass 'undefined' if empty string so backend ignores it
+      status: statusFilter || undefined,
+    },
     pollInterval: 5000,
+    // This ensures we keep showing old data while fetching new data
+    notifyOnNetworkStatusChange: true,
   });
 
-  if (loading)
+  // Only show full loader on FIRST load (no data yet)
+  if (loading && !data)
     return (
       <div className="p-10 text-center text-gray-500">Loading shipments...</div>
     );
@@ -41,8 +55,28 @@ export function ShipmentGrid() {
 
   return (
     <div className="space-y-4">
-      {/* TOOLBAR: Toggle Buttons */}
-      <div className="flex justify-end mb-4">
+      {/* TOOLBAR */}
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+        {/* LEFT: Filter Dropdown */}
+        <div className="relative">
+          <Filter className="absolute left-3 top-2.5 text-gray-400" size={16} />
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(0); // Reset to page 0 when filtering
+            }}
+            className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none min-w-[180px]"
+          >
+            <option value="">All Statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="IN_TRANSIT">In Transit</option>
+            <option value="DELIVERED">Delivered</option>
+            <option value="DELAYED">Delayed</option>
+          </select>
+        </div>
+
+        {/* RIGHT: View Toggles */}
         <div className="bg-white border p-1 rounded-lg flex space-x-1">
           <button
             onClick={() => setViewMode("table")}
@@ -67,84 +101,121 @@ export function ShipmentGrid() {
         </div>
       </div>
 
-      {/* CONTENT AREA */}
-      {viewMode === "table" ? (
-        // TABLE VIEW
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-          <table className="w-full text-sm text-left text-gray-600">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b">
-              <tr>
-                <th className="px-6 py-3">Tracking ID</th>
-                <th className="px-6 py-3">Status</th>
-                <th className="px-6 py-3">Origin</th>
-                <th className="px-6 py-3">Destination</th>
-                <th className="px-6 py-3">Est. Delivery</th>
-                <th className="px-6 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data?.shipments.map((shipment: any) => (
-                <tr
-                  key={shipment.id}
-                  onClick={() => setSelectedShipment(shipment)} // CLICK HANDLER
-                  className="bg-white border-b hover:bg-gray-50 cursor-pointer transition-colors"
-                >
-                  <td className="px-6 py-4 font-medium text-slate-900">
-                    {shipment.trackingId}
-                  </td>
-                  <td className="px-6 py-4">
-                    <StatusBadge status={shipment.status} />
-                  </td>
-                  <td className="px-6 py-4">{shipment.origin}</td>
-                  <td className="px-6 py-4">{shipment.destination}</td>
-                  <td className="px-6 py-4">
-                    {shipment.estimatedDelivery
-                      ? format(
-                          new Date(shipment.estimatedDelivery),
-                          "MMM d, yyyy"
-                        )
-                      : "N/A"}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="text-gray-400 hover:text-blue-600">
-                      <MoreVertical size={16} />
-                    </button>
-                  </td>
+      {/* CONTENT AREA (With Loading Opacity) */}
+      <div
+        className={`transition-opacity duration-200 ${
+          loading ? "opacity-50" : "opacity-100"
+        }`}
+      >
+        {viewMode === "table" ? (
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+            <table className="w-full text-sm text-left text-gray-600">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                <tr>
+                  <th className="px-6 py-3">Tracking ID</th>
+                  <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3">Origin</th>
+                  <th className="px-6 py-3">Destination</th>
+                  <th className="px-6 py-3">Est. Delivery</th>
+                  <th className="px-6 py-3 text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        // TILE VIEW
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data?.shipments.map((shipment: any) => (
-            <div
-              key={shipment.id}
-              onClick={() => setSelectedShipment(shipment)}
-              className="cursor-pointer"
-            >
-              <ShipmentTile shipment={shipment} />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* PAGINATION (Keep this) */}
-      <div className="flex justify-between items-center pt-4">
-        {/* ... (pagination code is fine) ... */}
+              </thead>
+              <tbody>
+                {data?.shipments.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-6 py-10 text-center text-gray-400"
+                    >
+                      No shipments found.
+                    </td>
+                  </tr>
+                ) : (
+                  data?.shipments.map((shipment: any) => (
+                    <tr
+                      key={shipment.id}
+                      onClick={() => setSelectedShipment(shipment)}
+                      className="bg-white border-b hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <td className="px-6 py-4 font-medium text-slate-900">
+                        {shipment.trackingId}
+                      </td>
+                      <td className="px-6 py-4">
+                        <StatusBadge status={shipment.status} />
+                      </td>
+                      <td className="px-6 py-4">{shipment.origin}</td>
+                      <td className="px-6 py-4">{shipment.destination}</td>
+                      <td className="px-6 py-4">
+                        {shipment.estimatedDelivery
+                          ? format(
+                              new Date(shipment.estimatedDelivery),
+                              "MMM d, yyyy"
+                            )
+                          : "N/A"}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        {isAdmin && (
+                          <button
+                            className="text-gray-400 hover:text-blue-600"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                          >
+                            <MoreVertical size={16} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {data?.shipments.map((shipment: any) => (
+              <div
+                key={shipment.id}
+                onClick={() => setSelectedShipment(shipment)}
+                className="cursor-pointer"
+              >
+                <ShipmentTile shipment={shipment} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* KEEP THIS BLOCK 👇 (It handles both Viewing and Editing triggers) */}
+      {/* PAGINATION */}
+      <div className="flex justify-between items-center pt-4">
+        <span className="text-sm text-gray-500">Page {page + 1}</span>
+        <div className="flex space-x-2">
+          <button
+            disabled={page === 0 || loading}
+            onClick={() => setPage((p) => p - 1)}
+            className="px-3 py-1 border rounded bg-white disabled:opacity-50 hover:bg-gray-50 flex items-center"
+          >
+            <ArrowLeft size={16} className="mr-1" /> Prev
+          </button>
+          <button
+            disabled={(data?.shipments.length || 0) < PAGE_SIZE || loading}
+            onClick={() => setPage((p) => p + 1)}
+            className="px-3 py-1 border rounded bg-white disabled:opacity-50 hover:bg-gray-50 flex items-center"
+          >
+            Next <ArrowRight size={16} className="ml-1" />
+          </button>
+        </div>
+      </div>
+
+      {/* MODALS */}
       {selectedShipment && !isEditing && (
         <ShipmentDetailModal
           shipment={selectedShipment}
           onClose={() => setSelectedShipment(null)}
-          onEdit={() => setIsEditing(true)} // This is crucial
+          onEdit={() => setIsEditing(true)}
         />
       )}
 
-      {/* KEEP THIS BLOCK 👇 (The Edit Form) */}
       {isEditing && selectedShipment && (
         <CreateShipmentModal
           shipmentToEdit={selectedShipment}

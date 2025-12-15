@@ -6,6 +6,9 @@ interface Props {
 }
 
 export function ShipmentTile({ shipment }: Props) {
+  const userRole = localStorage.getItem("role");
+  const isAdmin = userRole === "ADMIN";
+
   return (
     <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative group">
       {/* Top Row: ID & Status */}
@@ -42,10 +45,11 @@ export function ShipmentTile({ shipment }: Props) {
         </div>
       </div>
 
-      {/* Actions (Floating) */}
-      <button className="absolute top-4 right-2 p-1 text-gray-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
-        <MoreVertical size={18} />
-      </button>
+      {isAdmin && (
+        <button className="absolute top-4 right-2 p-1 text-gray-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+          <MoreVertical size={18} />
+        </button>
+      )}
     </div>
   );
 }
