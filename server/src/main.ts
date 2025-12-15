@@ -6,10 +6,8 @@ async function bootstrap() {
 
   // 1. ENABLE CORS (Allow Frontend to talk to Backend)
   app.enableCors({
-    origin: [
-      'http://localhost:5173', 
-      process.env.FRONTEND_URL
-    ],
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
 
