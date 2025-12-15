@@ -1,7 +1,6 @@
 import {
   X,
   Truck,
-  MapPin,
   Calendar,
   User,
   Package,
